@@ -1,0 +1,245 @@
+#:kivy 2.3.0
+#:import dp kivy.metrics.dp
+
+<MainLayout>:
+    orientation: "vertical"
+    padding: dp(16)
+    spacing: dp(14)
+
+    canvas.before:
+        Color:
+            rgba: 0.07, 0.07, 0.07, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    # --- ENCABEZADO ---
+    Label:
+        text: "YouTube Downloader"
+        color: 1, 1, 1, 1
+        font_size: dp(22)
+        bold: True
+        size_hint_y: None
+        height: dp(35)
+        halign: "left"
+        text_size: self.width, None
+
+    # --- CAMPO DE TEXTO (Grande y fácil de clickear) ---
+    TextInput:
+        id: url_input
+        hint_text: "Paste YouTube URL..."
+        hint_text_color: .5, .5, .5, 1
+        foreground_color: 1, 1, 1, 1
+        background_active: ""
+        background_normal: ""
+        background_color: .15, .15, .15, 1
+        cursor_color: .85, .15, .15, 1
+        multiline: False
+        font_size: dp(16)
+        padding: [dp(14), dp(14), dp(14), dp(14)]
+        size_hint_y: None
+        height: dp(54)  # Altura táctil real garantizada en Android
+        canvas.after:
+            Color:
+                rgba: (.3, .3, .3, 1) if self.focus else (.18, .18, .18, 1)
+            Line:
+                rounded_rectangle: (self.x, self.y, self.width, self.height, 6)
+                width: dp(1.2)
+
+    # --- BOTÓN OBTENER INFO ---
+    Button:
+        text: "Get Information"
+        font_size: dp(16)
+        bold: True
+        size_hint_y: None
+        height: dp(48)
+        background_normal: ""
+        background_color: 0, 0, 0, 0
+        color: 1, 1, 1, 1
+        on_release: root.get_information()
+        canvas.before:
+            Color:
+                rgba: (.25, .25, .25, 1) if self.state == 'normal' else (.18, .18, .18, 1)
+            RoundedRectangle:
+                pos: self.pos
+                size: self.size
+                radius: [6]
+
+    # --- CONTENEDOR CENTRAL VISTA PREVIA (Reducido para que no domine toda la pantalla) ---
+    BoxLayout:
+        orientation: "vertical"
+        padding: dp(8)
+        spacing: dp(8)
+        size_hint_y: 0.45  # Controla estrictamente que no ocupe más de la mitad del alto disponible
+
+        canvas.before:
+            Color:
+                rgba: .12, .12, .12, 1
+            RoundedRectangle:
+                pos: self.pos
+                size: self.size
+                radius: [10]
+
+        Image:
+            id: thumbnail
+            source: ""
+            allow_stretch: True
+            keep_ratio: True
+            size_hint_y: 0.7
+
+        BoxLayout:
+            orientation: "vertical"
+            size_hint_y: 0.3
+            spacing: dp(2)
+
+            Label:
+                id: title_label
+                text: "Video Title"
+                color: 1, 1, 1, 1
+                bold: True
+                font_size: dp(16)
+                text_size: self.width, None
+                halign: "center"
+                valign: "middle"
+
+            Label:
+                id: channel_label
+                text: "Channel"
+                color: .65, .65, .65, 1
+                font_size: dp(14)
+                text_size: self.width, None
+                halign: "center"
+                valign: "top"
+
+    # --- CONFIGURACIÓN DE DESCARGA ---
+    BoxLayout:
+        size_hint_y: None
+        height: dp(46)
+        spacing: dp(10)
+
+        Label:
+            text: "Download"
+            color: .9, .9, .9, 1
+            font_size: dp(15)
+            size_hint_x: .35
+            halign: "left"
+            text_size: self.width, None
+
+        Spinner:
+            id: download_type
+            text: "Video"
+            values: ("Video", "Audio")
+            font_size: dp(15)
+            background_normal: ""
+            background_color: 0, 0, 0, 0
+            color: 1, 1, 1, 1
+            on_text: root.download_type_changed(self.text)
+            canvas.before:
+                Color:
+                    rgba: .18, .18, .18, 1
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [6]
+
+    BoxLayout:
+        id: quality_box
+        size_hint_y: None
+        height: dp(46)
+        spacing: dp(10)
+
+        Label:
+            text: "Quality"
+            color: .9, .9, .9, 1
+            font_size: dp(15)
+            size_hint_x: .35
+            halign: "left"
+            text_size: self.width, None
+
+        Spinner:
+            id: quality_spinner
+            text: "Best"
+            values: ()
+            font_size: dp(15)
+            background_normal: ""
+            background_color: 0, 0, 0, 0
+            color: 1, 1, 1, 1
+            canvas.before:
+                Color:
+                    rgba: .18, .18, .18, 1
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [6]
+
+
+    Button:
+        text: "Change download folder"
+        size_hint_y: None
+        height: dp(46)
+        font_size: dp(15)
+
+        background_normal: ""
+        background_color: 0, 0, 0, 0
+        color: 1, 1, 1, 1
+
+        on_release: root.change_download_folder()
+
+        canvas.before:
+            Color:
+                rgba: (.25, .25, .25, 1) if self.state == 'normal' else (.18, .18, .18, 1)
+            RoundedRectangle:
+                pos: self.pos
+                size: self.size
+                radius: [6]
+
+    Label:
+        id: folder_label
+        text: "Current folder: Not selected"
+        color: .7, .7, .7, 1
+        font_size: dp(12)
+        text_size: self.width, None
+        halign: "center"
+        valign: "middle"
+        size_hint_y: None
+        height: self.texture_size[1] + dp(8)
+
+
+    # --- PROGRESO ---
+    BoxLayout:
+        orientation: "vertical"
+        size_hint_y: None
+        height: dp(32)
+        spacing: dp(4)
+
+        Label:
+            id: progress_label
+            text: "Ready"
+            color: .7, .7, .7, 1
+            font_size: dp(13)
+
+        ProgressBar:
+            id: progress_bar
+            max: 100
+            value: 0
+            size_hint_y: None
+            height: dp(6)
+
+    # --- BOTÓN PRINCIPAL ---
+    Button:
+        text: "Download"
+        font_size: dp(18)
+        bold: True
+        size_hint_y: None
+        height: dp(54)
+        background_normal: ""
+        background_color: 0, 0, 0, 0
+        color: 1, 1, 1, 1
+        on_release: root.download()
+        canvas.before:
+            Color:
+                rgba: (.85, .15, .15, 1) if self.state == 'normal' else (.65, .1, .1, 1)
+            RoundedRectangle:
+                pos: self.pos
+                size: self.size
+                radius: [8]
